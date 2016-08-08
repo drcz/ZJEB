@@ -1,6 +1,6 @@
 # ALGORITHMIC LANGUAGE ZJEB
 
-A lexically-scoped, anti-religious lisp dialect. Because why not?
+A lexically-scoped, one-night, anti-religious lisp dialect. Because why not?
 
 
 ### Requirements:
@@ -60,3 +60,10 @@ fac <- (bind (0) 1 (n) (* n (fac (- n 1))))
 >(halt)
 Auf Wiedersehen!
 ```
+
+### Some example programs:
+
+  * lisp.zjeb -- a very crude lisp variant in 39 lines of code,
+  * group-theory.zjeb -- now this is neat, definitely check it out -- a bit of abstract algebra in ZJEB!
+
+

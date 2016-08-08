@@ -1,0 +1,54 @@
+;;; shitty mini-lisp in ZJEB ;;;
+
+(def car (bind ((e . _)) e))
+(def cdr (bind ((_ . e)) e))
+(def cons (bind (a b) `(,a . ,b)))
+
+(def lookup [bind (s ()) ()
+                  (s ((s . v) . _)) v
+                  (s (_ . env)) (lookup s env)])
+
+(def mk-env [bind (() () env)
+                  env
+                  ((v . vs) (e . es) env)
+                  `((,v . ,e) . ,(mk-env vs es env))])
+
+(def evlis [bind (() env) ()
+                 ((e . es) env) `(,(eval e env) . ,(evlis es env))])
+ 
+(def eval
+     [bind (() env) ()
+           ('NIL env) ()
+           ('T env) T
+           (('QUOTE e) env) e
+           (('IF p c a) env) (if (eval p env) (eval c env) (eval a env))
+           (('LAMBDA as b) env) `(LAMBDA ,as ,b)
+           (('+ e1 e2) env) (+ (eval e1 env) (eval e2 env))
+           (('- e1 e2) env) (- (eval e1 env) (eval e2 env))
+           (('* e1 e2) env) (* (eval e1 env) (eval e2 env))
+           (('= e1 e2) env) (= (eval e1 env) (eval e2 env))
+           (('CONS e1 e2) env) (cons (eval e1 env) (eval e2 env))
+           (('CAR e) env) (car (eval e env))
+           (('CDR e) env) (cdr (eval e env))
+           (('NUMBERP e) env) (num? (eval e env))
+           (('ATOMP e) env) (atom? (eval e env))           
+           ((('LAMBDA as b) . es) env) (eval b (mk-env as (evlis es env) env))
+           ((s . es) env) (eval `(,(eval s env) . ,es) env)
+           (atom env) (if (num? atom) atom (lookup atom env))])
+
+(def run
+     (bind ((('LABEL s e) . prg) env) (run prg `((,s . ,(eval e env)) . ,env))
+           ((e) env) (eval e env)))
+
+
+;;; a small example:
+(run '[(LABEL sq (LAMBDA (x) (* x x)))
+       (LABEL mapsq (LAMBDA (l)
+                            (IF (= l NIL)
+                                NIL
+                                (CONS (sq (CAR l))
+                                      (mapsq (CDR l))))))
+       (mapsq (QUOTE (1 2 3 4 5)))]
+     ())
+(halt)
+
