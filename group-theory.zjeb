@@ -1,5 +1,6 @@
 ;;; an excercise in expressiveness -- some group theory in ZJEB!
 ;;; (try to do this in Java and tell me it's comprehensible)
+;;; [ NB this code reads nice with emacs' scheme-mode ]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -62,6 +63,7 @@
 (def cartesian
      (bind (xs ys)
 	   (apd-map (bind (x) (map (bind (y) `(,x ,y)) ys)) xs)))
+;; e.g. (cartesian '(q w e) '(1 2)) => ((q 1) (q 2) (w 1) (w 2) (e 1) (e 2))
 
 ;;; a "powerset" of a list:
 (def powerset
@@ -71,11 +73,12 @@
 	   ([bind (pow-xs)
 		  (apd (map (push x) pow-xs) pow-xs)]
 	    (powerset xs))))
+;; e.g. (powerset '(0 1 2)) => ((0 1 2) (0 1) (0 2) (0) (1 2) (1) (2) ())
 
 (def subset?
      (bind (xs ys)
 	   (every? (bind (x) (member? x ys)) xs)))
-;; e.g. (subset? '(1 3) '(0 1 2 3 4)) => T
+;; e.g. (subset? '(1 3) '(0 1 2 3)) => T
 
 ;;; all permutations of given list:
 (def perms
@@ -86,6 +89,8 @@
 			  (map (push x)
 			       (perms (delete x xs))))
 		    xs)))
+;; e.g. (perms '(0 1 2)) => ((0 1 2) (0 2 1) (1 0 2) (1 2 0) (2 0 1) (2 1 0))
+
 
 ;;; now the abstract algebra: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -102,20 +107,14 @@
 (def compose-perms
      (bind (perm1 perm2)
 	   (map (bind (p) (nth p perm1)) perm2)))
+;; e.g. (compose-perms '(0 2 1) '(2 1 0)) => (1 2 0)
 
 ;;; is given operation closed over domain?
 (def operation-closed?
      (bind (op dom)
 	   (every? (bind ((x y)) (member? (op x y) dom))
 		   (cartesian dom dom))))
-;; e.g. (operation-closed? compose-perms (perms '(0 1 2))) => T
-
-;;; are two operations equal wrt given domain?
-(def operations-eq?
-     (bind (op1 op2 dom)
-	   (every? (bind ((x y))
-			 (= (op1 x y) (op2 x y)))
-		   (cartesian dom dom))))
+;; e.g. (operation-closed? compose-perms (perms (iota 3))) => T
 
 ;;; is e neutral element of op (wrt dom)?
 (def neutral-element?
@@ -125,7 +124,7 @@
 			     (= (op x e) x)
 			     ()))
 		   dom)))
-; e.g. (neutral-element? '(0 1 2) compose-perms (perms '(0 1 2))) => T
+; e.g. (neutral-element? '(0 1 2) compose-perms (perms (iota 3))) => T
 
 ;;; is given operation wrt given domain associative?
 (def associative?
@@ -143,6 +142,8 @@
 		   (cartesian dom dom))))
 ;;; e.g. (commutative? + (iota 10)) => T
 
+
+;;; every element x has one and only one inverse y, s.t. x*y=1
 (def has-unique-inverses?
      (bind (op dom neutr)
 	   (every? (bind (x)
@@ -160,7 +161,8 @@
 			       dom))
 		   dom)))
 
-;;; finally we can tell what a GROUP is!
+
+;;; finally we can tell what a GROUP is -- tadaam! 
 (def group?
      (bind ((G e op))
 	   (and (member? e G)
@@ -176,22 +178,20 @@
 	   (and (group? `(,G ,e ,op))
 		(commutative? op G))))
 
-;;; two all-time classics:
 
-;;; cyclic group of order n:
-(def create-Zn
+;;; two all-time classics:
+(def create-Zn ;;; cyclic group of order n
      (bind (n) `(,(iota n) 0 ,(bind (x y) (modulo (+ x y) n)))))
 ;; e.g. (group? (create-Zn 5)) => T
 ;; e.g. (abelian-group? (create-Zn 5)) => T
 
-;;; n-th symmetric group:
-(def create-Sn
+(def create-Sn ;;; n-th symmetric group
      (bind (n) `(,(perms (iota n)) ,(iota n) ,compose-perms)))
 ;; e.g. (group? (create-Sn 3)) => T
 ;; e.g. (abelian-group? (create-Sn 3)) => () 
 
 
-;;; now ** THE FIRST GROUP-THEORETIC CONSTRUCTION **:
+;;; now ** THE FIRST (and only, 4 now) GROUP-THEORETIC CONSTRUCTION **:
 (def direct-product
      (bind ((G1 e1 op1) (G2 e2 op2))
 	   `(,(cartesian G1 G2)
@@ -227,11 +227,11 @@
 ;;     ((0 1 2)))
 
 ;; Now that was neat!
-;;; Ok, it's dawn and I can't see very well, so that's all for now.
-;;; "Auf Wiedersehen!" ;)
+;;; Ok, it's dawn and I *really* neet to grab some sleep, so that's all for now. "Auf Wiedersehen!" :)
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; todo (perhaps some day):
 ;;; -- normal subgroups,
 ;;; -- homomorphisms,
-;;; -- Cayley's theorem...
+;;; -- Cayley's theorem, ...
