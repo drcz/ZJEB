@@ -5,7 +5,8 @@
 ;;; -- def is syntactic, not semantic (being evaluated every time)
 ;;; -- therefore "(def s ...s...)" means "s" stands for an infinite expression
 ;;; -- lexical scope with the exception of definitions
-;;; -- no more lambdas, because they were invented by church, and religions suck.
+;;; -- no more lambdas, because they were invented by church, and religions suck
+;;; -- no more car, cdr and cons -- gonna miss them...
 ;;; -- quasiquote and dotted notations are the same as in scheme
 
 (use-modules (srfi srfi-1)
@@ -57,6 +58,12 @@
 ;(bind '('if a b c) '(iff elo du pa))
 ;(bind '(_ x) '(elo 12))
 
+;;; hahaha!
+(define (and->ifs es) (fold-right (lambda (h t) `(if ,h ,t ())) 'T es))
+(define (or->ifs es)  (fold-right (lambda (h t) `(if ,h T ,t)) '() es))
+;(and->ifs '(a b c))
+;(or->ifs '(a b c))
+
 (define (evaluate expr env topenv)
   (let evl ((expr expr))
     (match expr
@@ -73,6 +80,9 @@
 	 [e e])]
       [('bind . cases) `(&bind ,cases ,env)]      
       [('if p c a) (if (null? (evl p)) (evl a) (evl c))]
+      [('and . es) (evl (and->ifs es))]
+      [('or . es) (evl (or->ifs es))]
+      [('not e) (evl `(if ,e () T))] ;; i co mi zrobisz?
       [('quote e) e]
       [('quasiquote e)
        (let evqq ((expr e))
