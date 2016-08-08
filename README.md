@@ -8,7 +8,7 @@ A lexically-scoped, one-night, anti-religious lisp dialect. Because why not?
 Two things are required -- guile2.0, and (ice-9 nice-9) module. On debian-alikes this might do:
 ```
 apt-get install guile-2.0
-wget https://bitbucket.org/panicz/slayer/raw/d8bd36dadaf1246673979bede2c8548c4c53ba77/guile-modules/ice-9/nice-9.scm
+wget https://raw.githubusercontent.com/panicz/pamphlet/master/libraries/ice-9/nice-9.scm
 mv nice-9.scm <your guile's site path>/ice-9/
 ```
 
