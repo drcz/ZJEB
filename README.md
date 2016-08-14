@@ -64,6 +64,5 @@ Auf Wiedersehen!
 ### Some example programs:
 
   * lisp.zjeb -- a very crude lisp variant in 39 lines of code,
-  * group-theory.zjeb -- now this is neat, definitely check it out -- a bit of abstract algebra in ZJEB!
-
-
+  * dnf.zjeb -- converting propositional calculus formulas to dnf in 42 lines of code + definition of what DNF is,
+  * **group-theory.zjeb** -- now this is neat, definitely **check it out** -- a bit of abstract algebra in ZJEB!
