@@ -1,0 +1,87 @@
+;; propositional calculus -- conversion to disjunctive normal form.
+;; again, try this in java or c++!
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; atomic formulas are "variables"
+(def atomic-formula?
+     (bind (f) (and (atom? f) (not (num? f)))))
+
+;;; a formula is either atomic or built from formulas with connectives
+(def formula?
+     (bind (('and f1 f2)) (and (formula? f1) (formula? f2))
+	   (('or f1 f2)) (and (formula? f1) (formula? f2))
+	   (('not f)) (formula? f)
+	   (atomic) (atomic-formula? atomic)
+	   _ ()))
+
+(def atomic-or-negated-atomic?
+     (bind (('not f)) (atomic-formula? f)
+	   (f) (atomic-formula? f)))
+
+(def big-conjunction?
+     (bind (('and f rest)) (and (atomic-or-negated-atomic? f)
+				(big-conjunction? rest))
+	   (f) (atomic-or-negated-atomic? f)
+	   _ ()))
+
+;;; a disjunctive normal form is a "big alternative of conjunctions of formulas
+;;; which are either atomic or negation of atomic ones.
+(def dnf?
+     (bind (('or fs rest)) (and (big-conjunction? fs) (dnf? rest))
+	   (fs) (big-conjunction? fs)
+	   (_ ())))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; THM. Any formulacan be represented in DNF.
+
+;;; a "single" step of dnf transformation:
+(def ->dnf-step
+     (bind (('and p ('or q r))) ;; distributivity law (left)
+	   [(bind (p* q* r*) `(or (and ,p* ,q*) (and ,p* ,r*)))
+	    (->dnf-step p)
+	    (->dnf-step q)
+	    (->dnf-step r)]
+	   (('and ('or q r) p)) ;; distributivity law (right)
+	   [(bind (p* q* r*) `(or (and ,q* ,p*) (and ,r* ,p*)))
+	    (->dnf-step p)
+	    (->dnf-step q)
+	    (->dnf-step r)]
+	   (('and ('and p q) ('and r s))) ;; re-arrangement of conjs.
+	   `(and ,(->dnf-step p)
+		 (and ,(->dnf-step q)
+		      (and ,(->dnf-step r)
+			   ,(->dnf-step s))))
+	   (('and p q)) ;; descending...
+	   `(and ,(->dnf-step p)
+		 ,(->dnf-step q))
+	   (('or ('or p q) ('or r s))) ;; re-arrangement of alts.
+	   `(or ,(->dnf-step p)
+		(or ,(->dnf-step q)
+		    (or ,(->dnf-step r)
+			,(->dnf-step s))))
+	   (('or p q)) ;; descending...
+	   `(or ,(->dnf-step p)
+		,(->dnf-step q))
+	   (('not ('and p q))) ;; de morgan's law 1
+	   `(or ,(->dnf-step `(not ,p))
+		,(->dnf-step `(not ,q)))
+	   (('not ('or p q))) ;; de morgan's law 2
+	   (->dnf-step `(and ,(->dnf-step `(not ,p))
+			     ,(->dnf-step `(not ,q))))
+	   (('not ('not f))) ;; excluded middle (sorry mr Heyting!)
+	   (->dnf-step f)	   
+	   (f) f))
+	   
+;;; and finally, applying the step greedily:
+(def ->dnf
+     (bind (f) (->dnf f ())
+	   (f f) f
+	   (f* f) (->dnf (->dnf-step f*) f*)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; boom done! took like what, 10 minutes? some examples:
+(->dnf '(not (or a (not a))))
+(dnf? (->dnf '(not (or a (not a)))))
+(->dnf '(and (or a (not a)) (not b)))
+(dnf? (->dnf '(and (or a (not a)) (not b))))
